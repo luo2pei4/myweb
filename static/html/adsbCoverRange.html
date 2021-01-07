@@ -1,0 +1,94 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+        <script src="/static/js/jquery/jquery-ui.min.js"></script>
+        <script src="/static/js/echarts/extension/bmap.min.js"></script>
+        <script type="text/javascript">  
+            function initialize() {
+                var mp = new BMap.Map('adsbCoverRangeHeatMap');
+                mp.centerAndZoom(new BMap.Point(139.789, 35.783), 11);
+                mp.enableScrollWheelZoom();
+            }
+            function loadScript() {
+                var script = document.createElement("script");
+                script.src = "http://api.map.baidu.com/api?v=2.0&ak=RFTS5TFGCUfnh666RVCKNLRMxViP2hAj&callback=initialize";
+                document.body.appendChild(script);
+            }
+            window.onreadystatechange = loadScript();
+        </script>
+    </head>
+    <body>
+        <form>
+            <div>
+                from<input id="startDate" type="text" style="width: 80px;"/>
+                to<input id="endDate" type="text"  style="width: 80px;"/>
+                ArrDep
+                <select id="arrDep" name="arrDep">
+                    <option value=""></option>
+                    <option value="DEP">DEP</option>
+                    <option value="ARR">ARR</option>
+                </select>
+                <input id="searchCoverRange" type="button" value="查询"/>
+            </div>
+            <div id="adsbCoverRangeHeatMap" style="margin-top: 5px;width:100%;height:96%"></div>
+        </form>
+        <script type="text/javascript">
+            $(document).ready(function(){
+
+                $("#startDate").datepicker({dateFormat:"yy-mm-dd"});
+                $("#endDate").datepicker({dateFormat:"yy-mm-dd"});
+
+                $("#searchCoverRange").click(function(){
+
+                    var startDate = document.getElementById('startDate').value;
+                    var endDate = document.getElementById('endDate').value;
+
+                    $.post("/adsbCoverRange", {
+                        startDate:startDate,
+                        endDate:endDate,
+                        arrDep:$("#arrDep").val(),
+                    },
+                    function(resp, status){
+                        coordList = JSON.parse(resp);
+                        var points = []
+                        for (i = 0; i < coordList.length; i ++) {
+                            points.push([coordList[i].Lng, coordList[i].Lat, coordList[i].Count])
+                        }
+                        var myChart = echarts.init(document.getElementById('adsbCoverRangeHeatMap'));
+                        myChart.setOption(option = {
+                            animation: false,
+                            bmap: {
+                                center: [139.7896797, 35.7831959],
+                                zoom: 11,
+                                roam: true
+                            },
+                            visualMap: {
+                                show: false,
+                                top: 'top',
+                                min: 0,
+                                max: 5,
+                                seriesIndex: 0,
+                                calculable: true,
+                                inRange: {
+                                color: ['blue', 'blue', 'green', 'yellow', 'red']
+                            }
+                            },
+                            series: [{
+                                type: 'heatmap',
+                                coordinateSystem: 'bmap',
+                                data: points,
+                                pointSize: 5,
+                                blurSize: 6
+                            }]
+                        });
+                        var bmap = myChart.getModel().getComponent('bmap').getBMap();
+                        bmap.addControl(new BMap.MapTypeControl());
+                        bmap.enableScrollWheelZoom();
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

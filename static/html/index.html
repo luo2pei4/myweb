@@ -1,0 +1,16 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Exchange Rate</title>
+        <link rel="stylesheet" href="/static/css/login.css">
+    </head>
+    <body>
+        <form class="box" action="/login" method="POST">
+            <div><b style="color: red;">{{.ErrMsg}}</b></div>
+            <h1>Login</h1>
+            <input type="text" id="userid" name="userid" placeholder="用户ID" value="{{.UserID}}">
+            <input type="password" id="password" name="password" placeholder="密码">
+            <input type="submit" value="登录">
+        </form>
+    </body>
+</html>

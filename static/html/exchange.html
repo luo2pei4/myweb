@@ -1,0 +1,204 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Exchange Rate</title>
+    <link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+    <script src="/static/js/jquery/jquery-ui.min.js"></script>
+</head>
+<body>
+    <form>
+        <div>
+            <select id="bank" name="bank">
+                <option value="1">中国银行</option>
+                <option value="2">招商银行</option>
+                <option value="3">建设银行</option>
+            </select>
+            <select id="currency" name="currency">
+                <option value="1">阿联酋迪拉姆</option>
+                <option value="2">澳大利亚元</option>
+                <option value="3">巴西里亚尔</option>
+                <option value="4">加拿大元</option>
+                <option value="5">瑞士法郎</option>
+                <option value="6">丹麦克朗</option>
+                <option value="7">欧元</option>
+                <option value="8">英镑</option>
+                <option value="9">港币</option>
+                <option value="10">印尼卢比</option>
+                <option value="11">印度卢比</option>
+                <option value="12" selected>日元</option>
+                <option value="13">韩国元</option>
+                <option value="14">澳门元</option>
+                <option value="15">马来西亚林吉特</option>
+                <option value="16">挪威克朗</option>
+                <option value="17">新西兰元</option>
+                <option value="18">菲律宾比索</option>
+                <option value="19">卢布</option>
+                <option value="20">沙特里亚尔</option>
+                <option value="21">瑞典克朗</option>
+                <option value="22">新加坡元</option>
+                <option value="23">泰国铢</option>
+                <option value="24">土耳其里拉</option>
+                <option value="25">新台币</option>
+                <option value="26">美元</option>
+                <option value="27">南非兰特</option>
+                <option value="28">巴基斯坦卢比</option>
+                <option value="29">哈萨克斯坦坚戈</option>
+            </select>
+            <select id="price" name="price">
+                <option value="1">现汇买入价</option>
+                <option value="2">现钞买入价</option>
+                <option value="3">现汇卖出价</option>
+                <option value="4">现钞卖出价</option>
+            </select>
+            from<input id="startDate" type="text" style="width: 80px;"/> to<input id="endDate" type="text"  style="width: 80px;"/>
+            <input id="changeBank" type="button" value="查询"/>
+        </div>
+        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+        <div id="main" style="width: 90%;height:80%"></div>
+    </form>
+    <script>
+        $(document).ready(function(){
+
+            $("#startDate").datepicker({dateFormat:"yy-mm-dd"});
+            $("#endDate").datepicker({dateFormat:"yy-mm-dd"});
+
+            // 基于准备好的dom，初始化echarts实例
+            var myChart = echarts.init(document.getElementById('main'));
+
+            $("#changeBank").click(function(){
+
+                var obj = document.getElementById('bank');
+                var idx = obj.selectedIndex;
+                var bankname = obj.options[idx].text;
+
+                obj = document.getElementById('currency');
+                idx = obj.selectedIndex;
+                var currencyname = obj.options[idx].text;
+
+                obj = document.getElementById('price');
+                idx = obj.selectedIndex;
+                var pricename = obj.options[idx].text;
+
+                var startDate = document.getElementById('startDate').value;
+                var endDate = document.getElementById('endDate').value
+
+                var title = "";
+
+                if (startDate == endDate || (!isEmpty(startDate) && isEmpty(endDate))) {
+                    title = bankname + currencyname + pricename + '(' + startDate + ')';
+                } else {
+                    title = bankname + currencyname + pricename + '(' + startDate + ' ~ ' + endDate + ')';
+                }
+
+                $.post("/searchExRate", {
+                    bank:$("#bank").val(),
+                    price:$("#price").val(),
+                    startDate:startDate,
+                    endDate:endDate,
+                    currency:$("#currency").val()
+                },
+                function(resp, status){
+                    rateinfoList = JSON.parse(resp);
+                    var errMsg = rateinfoList.ErrMsg;
+                    var minrate = rateinfoList.Min;
+                    var maxrate = rateinfoList.Max;
+                    var rateInfoSlice = rateinfoList.RateInfoSlice;
+
+                    if (rateInfoSlice == null || rateInfoSlice.length == 0) {
+                        alert(errMsg)
+                        return;
+                    }
+
+                    var date = [];
+                    var data = [];
+
+                    for (i = 0; i < rateInfoSlice.length; i ++) {
+                        date.push(rateInfoSlice[i].ReleaseTime);
+                        data.push(rateInfoSlice[i].Rate)
+                    }
+
+                    option = {
+                        tooltip: {
+                            trigger: 'axis',
+                            position: function (pt) {
+                                return [pt[0], '10%'];
+                            }
+                        },
+                        title: {
+                            left: 'center',
+                            text: title,
+                        },
+                        toolbox: {
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                restore: {},
+                                saveAsImage: {}
+                            }
+                        },
+                        xAxis: {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: date
+                        },
+                        yAxis: {
+                            min: minrate,
+                            max: maxrate,
+                            type: 'value',
+                            boundaryGap: [0, '100%']
+                        },
+                        dataZoom: [{
+                            type: 'inside',
+                            start: 0,
+                            end: 10
+                        }, {
+                            start: 0,
+                            end: 10,
+                            handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+                            handleSize: '80%',
+                            handleStyle: {
+                                color: '#fff',
+                                shadowBlur: 3,
+                                shadowColor: 'rgba(0, 0, 0, 0.6)',
+                                shadowOffsetX: 2,
+                                shadowOffsetY: 2
+                            }
+                        }],
+                        series: [
+                            {
+                                name: pricename,
+                                type: 'line',
+                                smooth: true,
+                                symbol: 'none',
+                                sampling: 'average',
+                                itemStyle: {
+                                    color: 'rgb(255, 70, 131)'
+                                },
+                                areaStyle: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: 'rgb(255, 158, 68)'
+                                    }, {
+                                        offset: 1,
+                                        color: 'rgb(255, 70, 131)'
+                                    }])
+                                },
+                                data: data
+                            }
+                        ]
+                    };
+                    myChart.setOption(option);
+                });
+            });
+        });
+
+        function isEmpty(inputDate) {
+            if (inputDate == null || inputDate == '' || inputDate == undefined) {
+                return true;
+            }
+            return false;
+        }
+    </script>
+</body>
+</html>
