@@ -39,7 +39,10 @@ func LoadConnections() error {
 		}
 
 		f := daoRegister[key]
-		f(conn)
+
+		if f != nil {
+			f(conn)
+		}
 	}
 
 	return nil
