@@ -7,9 +7,11 @@ import (
 	"myweb/db"
 )
 
+// 每个XXXDao包通过init函数注册函数值(写入daoRegister中)
 var daoRegister map[string]func(c *db.Connection)
 
-// LoadConnections 装载数据库连接
+// LoadConnections 装载数据库连接.
+// 遍历配置文件中的db树, 并创建相应的数据库连接. db的子树的key在daoRegister中查找, 如果存在, 则将创建的数据库连接传入函数值进行处理。
 func LoadConnections() error {
 
 	cfgs, err := cfgloader.GetTable("db")
