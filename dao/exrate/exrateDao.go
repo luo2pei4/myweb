@@ -2,6 +2,7 @@ package exratedao
 
 import (
 	"fmt"
+	"myweb/dao"
 	"myweb/db"
 	exratedto "myweb/dto/exrate"
 )
@@ -11,15 +12,16 @@ var conn *db.Connection
 // BankInfoMap 银行基础信息Map
 var bankInfoMap map[int]*exratedto.BankInfo
 
+const key = "exrate"
+
 func init() {
 
-	c, err := db.NewConnection("exrate", "mysql", "dbo:caecaodb@tcp(192.168.3.168:3306)/exrate?charset=utf8&parseTime=true&loc=Local")
-	if err != nil {
-		panic(err)
-	}
-	conn = c
-	bankInfoMap = initBankInfoMap()
-	fmt.Println("initBankInfoMap successful.")
+	dao.RegistFunc(key, func(c *db.Connection) {
+		conn = c
+		fmt.Println("Set connection in exrateDao.")
+		bankInfoMap = initBankInfoMap()
+		fmt.Println("initBankInfoMap successful.")
+	})
 }
 
 // initBankInfoMap 初始化银行表基础信息

@@ -2,19 +2,21 @@ package adsbdao
 
 import (
 	"fmt"
+	"myweb/dao"
 	"myweb/db"
 	adsbdto "myweb/dto/adsb"
 )
 
 var conn *db.Connection
 
+const key = "adsb"
+
 func init() {
 
-	c, err := db.NewConnection("adsb", "mysql", "dbo:caecaodb@tcp(192.168.3.169:3306)/adsb?charset=utf8&parseTime=true&loc=Local")
-	if err != nil {
-		panic(err)
-	}
-	conn = c
+	dao.RegistFunc(key, func(c *db.Connection) {
+		conn = c
+		fmt.Println("Set connection in adsbDao.")
+	})
 }
 
 // GetCoordInfo 获取坐标信息
