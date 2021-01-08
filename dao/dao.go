@@ -11,7 +11,7 @@ import (
 var daoRegister map[string]func(c *db.Connection)
 
 // LoadConnections 装载数据库连接.
-// 遍历配置文件中的db树, 并创建相应的数据库连接. db的子树的key在daoRegister中查找, 如果存在, 则将创建的数据库连接传入函数值进行处理。
+// 遍历配置文件中的db表, 并创建相应的数据库连接. 用db表中的key在daoRegister中查找, 如果存在, 则将创建的数据库连接传入函数值进行处理。
 func LoadConnections() error {
 
 	cfgs, err := cfgloader.GetTable("db")
