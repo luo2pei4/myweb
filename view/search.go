@@ -8,6 +8,7 @@ import (
 	"myweb/service"
 	"myweb/utils"
 	"net/http"
+	"time"
 )
 
 // 查询汇率
@@ -46,8 +47,10 @@ func searchExRate(response http.ResponseWriter, request *http.Request) {
 
 	} else {
 
+		// 如果没有输入结束日期, 默认以当天为结束日期
 		if endDate == "" {
-			endDate = startDate
+			now := time.Now().Format(time.RFC3339)
+			endDate = now[:10]
 		}
 
 		rilist, err := service.GetRateInfoList(bankID, bankTableColumnID, currencyID, startDate+" 00:00:00", endDate+" 23:59:59")

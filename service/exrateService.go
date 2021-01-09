@@ -8,6 +8,7 @@ import (
 // GetRateInfoList 获取汇率信息列表
 func GetRateInfoList(bankID, bankTableColumnID, currency int, startDate, endDate string) (rateInfoList *exratedto.RateInfoList, err error) {
 
+	rateInfoList = &exratedto.RateInfoList{}
 	rateInfoSlice, err := exratedao.GetRateInfoSlice(bankID, bankTableColumnID, currency, startDate, endDate)
 
 	if err != nil {
@@ -28,7 +29,6 @@ func GetRateInfoList(bankID, bankTableColumnID, currency int, startDate, endDate
 			return nil, err
 		}
 
-		rateInfoList = &exratedto.RateInfoList{}
 		rateInfoList.RateInfoSlice = rateInfoSlice
 		rateInfoList.Min = minrate
 		rateInfoList.Max = maxrate
