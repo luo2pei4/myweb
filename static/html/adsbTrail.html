@@ -47,6 +47,9 @@
                         }
 
                         var aircraftTrail = []
+                        var points = []
+                        points.push(139.7896797, 35.7831959)
+                        var sortTrail = []
 
                         for (var key in coordList) {
 
@@ -55,6 +58,16 @@
 
                             for (var i in lnglatsList) {
                                 lnglats.push([lnglatsList[i].Lng, lnglatsList[i].Lat]);
+
+                                if (i == 0 || i == lnglatsList.length - 1) {
+                                    points.push(new BMap.Point(lnglatsList[i].Lng, lnglatsList[i].Lat));
+                                    sortTrail.push(lnglatsList[i])
+                                } else {
+                                    if (lnglatsList[i].Alt != 0 && lnglatsList[i].Spd != 0) {
+                                        points.push(new BMap.Point(lnglatsList[i].Lng, lnglatsList[i].Lat));
+                                        sortTrail.push(lnglatsList[i])
+                                    }
+                                }
                             }
 
                             var hStep = 300 / (lnglats.length - 1);
@@ -271,6 +284,28 @@
                         var bmap = myChart.getModel().getComponent('bmap').getBMap();
                         bmap.addControl(new BMap.MapTypeControl());
                         bmap.enableScrollWheelZoom();
+
+                        var pointOpts = {
+                            size: BMAP_POINT_SIZE_BIG,
+                            shape: BMAP_POINT_SHAPE_WATERDROP
+                        }
+                        var infoWinOpts = {
+                            width : 240,     // 信息窗口宽度
+                            height: 120,     // 信息窗口高度
+                            title : "Simple ADS-B Information"
+                        }
+
+                        var pointCollection = new BMap.PointCollection(points, pointOpts);  // 初始化PointCollection
+                        pointCollection.addEventListener('click', function (e) {
+                            for (i = 0; i < sortTrail.length; i++) {
+                                if (sortTrail[i].Lng == e.point.lng && sortTrail[i].Lat == e.point.lat) {
+                                    var infoWindow = new BMap.InfoWindow("Lng: " + e.point.lng + "</br>Lat: " + e.point.lat + "</br>Alt: " + sortTrail[i].Alt + "</br>Spd: " + sortTrail[i].Spd, infoWinOpts);
+                                    bmap.openInfoWindow(infoWindow, e.point);
+                                    break;
+                                }
+                            }
+                        });
+                        bmap.addOverlay(pointCollection);
                     });
                 });
             });

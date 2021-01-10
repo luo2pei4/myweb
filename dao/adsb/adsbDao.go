@@ -62,11 +62,11 @@ func GetCoordWithCount(startDate, endDate, arrDep string) (coordSlice []adsbdto.
 }
 
 // GetCoordsWithIcao 获取坐标信息
-func GetCoordsWithIcao(actualDate, callsign string) (icaoCoordMap map[string][]adsbdto.Coordinate, err error) {
+func GetCoordsWithIcao(actualDate, callsign string) (simpleAdsbMap map[string][]adsbdto.SimpleAdsbInfo, err error) {
 
 	sql := `
 	select 
-		t1.icao, t1.Longitude, t1.Latitude 
+		t1.icao, t1.Longitude, t1.Latitude, t1.Alt, t1.Spd, DATE_FORMAT(t1.createtime, '%%Y-%%m-%%d %%H:%%i:%%s') as createtime 
 	from 
 		adsbinfohis t1, 
 		(select icao, firstsignaltime, lastsignaltime from flightinfo where callsign = '%v' and actualdate = '%v') t2
@@ -87,25 +87,25 @@ func GetCoordsWithIcao(actualDate, callsign string) (icaoCoordMap map[string][]a
 		return nil, err
 	}
 
-	icaoCoordMap = make(map[string][]adsbdto.Coordinate)
+	simpleAdsbMap = make(map[string][]adsbdto.SimpleAdsbInfo)
 
 	for rows.Next() {
 
-		coord := adsbdto.Coordinate{}
+		simpleAdsb := adsbdto.SimpleAdsbInfo{}
 		icao := ""
 
-		if err = rows.Scan(&icao, &coord.Lng, &coord.Lat); err != nil {
+		if err = rows.Scan(&icao, &simpleAdsb.Lng, &simpleAdsb.Lat, &simpleAdsb.Alt, &simpleAdsb.Spd, &simpleAdsb.Createtime); err != nil {
 			return nil, err
 		}
 
-		if icaoCoordMap[icao] == nil {
-			coordSlice := make([]adsbdto.Coordinate, 0)
-			coordSlice = append(coordSlice, coord)
-			icaoCoordMap[icao] = coordSlice
+		if simpleAdsbMap[icao] == nil {
+			simpleAdsbSlice := make([]adsbdto.SimpleAdsbInfo, 0)
+			simpleAdsbSlice = append(simpleAdsbSlice, simpleAdsb)
+			simpleAdsbMap[icao] = simpleAdsbSlice
 		} else {
-			coordSlice := icaoCoordMap[icao]
-			coordSlice = append(coordSlice, coord)
-			icaoCoordMap[icao] = coordSlice
+			simpleAdsbSlice := simpleAdsbMap[icao]
+			simpleAdsbSlice = append(simpleAdsbSlice, simpleAdsb)
+			simpleAdsbMap[icao] = simpleAdsbSlice
 		}
 	}
 

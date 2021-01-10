@@ -11,3 +11,13 @@ type CoordWithCount struct {
 	Coord Coordinate
 	Count int
 }
+
+// SimpleAdsbInfo 简单的ADSB信息
+type SimpleAdsbInfo struct {
+	Icao       string
+	Alt        string
+	Lat        string
+	Lng        string
+	Spd        string
+	Createtime string
+}

@@ -11,9 +11,9 @@ func GetCoordWithCount(startDate, endDate, arrDep string) (coordList []adsbdto.C
 }
 
 // GetAircraftCoordMap 获取飞机的坐标Map
-func GetAircraftCoordMap(actualDate, callsign string) (icaoCoordMap map[string][]adsbdto.Coordinate, err error) {
+func GetAircraftCoordMap(actualDate, callsign string) (simpleAdsbMap map[string][]adsbdto.SimpleAdsbInfo, err error) {
 
-	icaoCoordMap, err = adsbdao.GetCoordsWithIcao(actualDate, callsign)
+	simpleAdsbMap, err = adsbdao.GetCoordsWithIcao(actualDate, callsign)
 
 	if err != nil {
 		return nil, err
