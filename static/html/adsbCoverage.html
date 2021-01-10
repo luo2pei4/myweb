@@ -40,12 +40,9 @@
 
                 $("#searchCoverRange").click(function(){
 
-                    var startDate = document.getElementById('startDate').value;
-                    var endDate = document.getElementById('endDate').value;
-
-                    $.post("/adsbCoverRange", {
-                        startDate:startDate,
-                        endDate:endDate,
+                    $.post("/adsbCoverage", {
+                        startDate:$("#startDate").val(),
+                        endDate:$("#endDate").val(),
                         arrDep:$("#arrDep").val(),
                     },
                     function(resp, status){
@@ -60,7 +57,7 @@
 
                         var points = []
                         for (i = 0; i < coordList.length; i ++) {
-                            points.push([coordList[i].Lng, coordList[i].Lat, coordList[i].Count])
+                            points.push([coordList[i].Coord.Lng, coordList[i].Coord.Lat, coordList[i].Count])
                         }
                         var myChart = echarts.init(document.getElementById('adsbCoverRangeHeatMap'));
                         myChart.setOption(option = {

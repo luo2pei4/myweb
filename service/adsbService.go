@@ -5,7 +5,19 @@ import (
 	adsbdto "myweb/dto/adsb"
 )
 
-// ReadCoordInfo 读取坐标信息
-func ReadCoordInfo(startDate, endDate, arrDep string) (coordList []adsbdto.Coordinate, err error) {
-	return adsbdao.GetCoordInfo(startDate, endDate, arrDep)
+// GetCoordWithCount 读取坐标信息
+func GetCoordWithCount(startDate, endDate, arrDep string) (coordList []adsbdto.CoordWithCount, err error) {
+	return adsbdao.GetCoordWithCount(startDate, endDate, arrDep)
+}
+
+// GetAircraftCoordMap 获取飞机的坐标Map
+func GetAircraftCoordMap(actualDate, callsign string) (icaoCoordMap map[string][]adsbdto.Coordinate, err error) {
+
+	icaoCoordMap, err = adsbdao.GetCoordsWithIcao(actualDate, callsign)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return
 }

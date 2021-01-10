@@ -76,7 +76,7 @@ func searchExRate(response http.ResponseWriter, request *http.Request) {
 	response.Write(obj)
 }
 
-func adsbCoverRange(response http.ResponseWriter, request *http.Request) {
+func adsbCoverage(response http.ResponseWriter, request *http.Request) {
 
 	// 如果是直接从网页输入地址, 直接跳转到登录界面.
 	if request.Method == "GET" {
@@ -110,7 +110,7 @@ func adsbCoverRange(response http.ResponseWriter, request *http.Request) {
 			endDate = now[:10]
 		}
 
-		coordList, err := service.ReadCoordInfo(startDate+" 00:00:00", endDate+" 23:59:59", arrDep)
+		coordList, err := service.GetCoordWithCount(startDate+" 00:00:00", endDate+" 23:59:59", arrDep)
 
 		if err != nil {
 			fmt.Println(err.Error())
@@ -120,6 +120,57 @@ func adsbCoverRange(response http.ResponseWriter, request *http.Request) {
 			pageInfo.ErrMsg = "没有数据, 请重新指定查询条件."
 		} else {
 			pageInfo.Data = coordList
+		}
+	}
+
+	obj, err := json.Marshal(pageInfo)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		pageInfo.ErrMsg = "系统异常, 请稍后再试."
+	}
+
+	authenticate.RedistributeToken(response, claims.UserID)
+	response.Write(obj)
+}
+
+func adsbTrail(response http.ResponseWriter, request *http.Request) {
+
+	// 如果是直接从网页输入地址, 直接跳转到登录界面.
+	if request.Method == "GET" {
+		renderTempalate(response, "static/html/index.html", LoginPage{})
+		return
+	}
+
+	// 验证Token并返回用户信息
+	claims, returnCode := authenticate.AuthToken(request)
+
+	if returnCode != http.StatusOK {
+		response.WriteHeader(returnCode)
+		return
+	}
+
+	request.ParseForm()
+	actualDate := request.Form.Get("actualDate")
+	callsign := request.Form.Get("callsign")
+	pageInfo := dto.PageInfo{}
+
+	if actualDate == "" {
+
+		pageInfo.ErrMsg = "请输入日期."
+
+	} else {
+
+		acMap, err := service.GetAircraftCoordMap(actualDate, callsign)
+
+		if err != nil {
+			pageInfo.ErrMsg = "系统异常, 请稍后再试."
+		}
+
+		if len(acMap) == 0 {
+			pageInfo.ErrMsg = "没有数据, 请重新指定查询条件."
+		} else {
+			pageInfo.Data = acMap
 		}
 	}
 

@@ -5,7 +5,7 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <script type="text/javascript">  
             function initialize() {
-                var mp = new BMap.Map('adsbCoverRangeHeatMap');
+                var mp = new BMap.Map('adsbTrailMap');
                 mp.centerAndZoom(new BMap.Point(139.789, 35.783), 11);
                 mp.enableScrollWheelZoom();
             }
@@ -20,35 +20,23 @@
     <body>
         <form>
             <div>
-                from<input id="startDate" type="text" style="width: 80px;"/>
-                to<input id="endDate" type="text"  style="width: 80px;"/>
-                ArrDep
-                <select id="arrDep" name="arrDep">
-                    <option value=""></option>
-                    <option value="DEP">DEP</option>
-                    <option value="ARR">ARR</option>
-                </select>
+                Date<input id="actualDate" type="text" style="width: 80px;"/>
+                Callsign<input id="callsign" type="text" style="width: 100px;"/>
                 <input id="searchCoverRange" type="button" value="查询"/>
             </div>
-            <div id="adsbCoverRangeHeatMap" style="margin-top: 5px;width:100%;height:96%"></div>
+            <div id="adsbTrailMap" style="margin-top: 5px;width:100%;height:97%"></div>
         </form>
         <script type="text/javascript">
             $(document).ready(function(){
 
-                $("#startDate").datepicker({dateFormat:"yy-mm-dd"});
-                $("#endDate").datepicker({dateFormat:"yy-mm-dd"});
+                $("#actualDate").datepicker({dateFormat:"yy-mm-dd"});
 
                 $("#searchCoverRange").click(function(){
-
-                    var startDate = document.getElementById('startDate').value;
-                    var endDate = document.getElementById('endDate').value;
-
-                    $.post("/adsbCoverRange", {
-                        startDate:startDate,
-                        endDate:endDate,
-                        arrDep:$("#arrDep").val(),
+                    $.post("/adsbTrail", {
+                        actualDate:$("#actualDate").val(),
+                        callsign:$("#callsign").val()
                     },
-                    function(resp, status){
+                    function(resp, status) {
                         pageInfo = JSON.parse(resp);
                         errMsg = pageInfo.ErrMsg;
                         coordList = pageInfo.Data;
@@ -58,37 +46,228 @@
                             return;
                         }
 
-                        var points = []
-                        for (i = 0; i < coordList.length; i ++) {
-                            points.push([coordList[i].Lng, coordList[i].Lat, coordList[i].Count])
+                        var aircraftTrail = []
+
+                        for (var key in coordList) {
+
+                            var lnglats = [];
+                            var lnglatsList = coordList[key]
+
+                            for (var i in lnglatsList) {
+                                lnglats.push([lnglatsList[i].Lng, lnglatsList[i].Lat]);
+                            }
+
+                            var hStep = 300 / (lnglats.length - 1);
+
+                            aircraftTrail.push({
+                                coords: lnglats,
+                                lineStyle: {
+                                    normal: {
+                                        color: echarts.color.modifyHSL('#5A94DF', Math.round(hStep * key))
+                                    }
+                                }
+                            })
                         }
-                        var myChart = echarts.init(document.getElementById('adsbCoverRangeHeatMap'));
+
+                        var myChart = echarts.init(document.getElementById('adsbTrailMap'));
+                        myChart.clear();
                         myChart.setOption(option = {
-                            animation: false,
                             bmap: {
                                 center: [139.7896797, 35.7831959],
                                 zoom: 11,
-                                roam: true
-                            },
-                            visualMap: {
-                                show: false,
-                                top: 'top',
-                                min: 0,
-                                max: 5,
-                                seriesIndex: 0,
-                                calculable: true,
-                                inRange: {
-                                color: ['blue', 'blue', 'green', 'yellow', 'red']
-                            }
+                                roam: true,
+                                mapStyle: {
+                                    styleJson: [
+                                        {
+                                            'featureType': 'land',    
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                    'color': '#081734'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'building',   
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'color': '#04406F'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'building',   
+                                            'elementType': 'labels',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'highway',     
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'color': '#015B99'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'highway',    
+                                            'elementType': 'labels',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'arterial',   
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'color':'#003051'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'arterial',
+                                            'elementType': 'labels',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'green',
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'water',
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'color': '#044161'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'subway',    
+                                            'elementType': 'geometry.stroke',
+                                            'stylers': {
+                                                'color': '#003051'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'subway',
+                                            'elementType': 'labels',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'railway',
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'railway',
+                                            'elementType': 'labels',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'all',     
+                                            'elementType': 'labels.text.stroke',
+                                            'stylers': {
+                                                'color': '#313131'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'all',     
+                                            'elementType': 'labels.text.fill',
+                                            'stylers': {
+                                                'color': '#FFFFFF'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'manmade',   
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'manmade',
+                                            'elementType': 'labels',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'local',
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'local',
+                                            'elementType': 'labels',
+                                            'stylers': {
+                                                'visibility': 'off'
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'subway',
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'lightness': -65
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'railway',
+                                            'elementType': 'all',
+                                            'stylers': {
+                                                'lightness': -40
+                                            }
+                                        },
+                                        {
+                                            'featureType': 'boundary',
+                                            'elementType': 'geometry',
+                                            'stylers': {
+                                                'color': '#8b8787',
+                                                'weight': '1',
+                                                'lightness': -29
+                                            }
+                                        }
+                                    ]
+                                }
                             },
                             series: [{
-                                type: 'heatmap',
+                                type: 'lines',
                                 coordinateSystem: 'bmap',
-                                data: points,
-                                pointSize: 5,
-                                blurSize: 6
+                                polyline: true,
+                                data: aircraftTrail,
+                                silent: true,
+                                lineStyle: {
+                                    color: 'rgb(255, 0, 0)',
+                                    opacity: 0.2,
+                                    width: 1
+                                },
+                                progressiveThreshold: 500,
+                                progressive: 200
+                            }, {
+                                type: 'lines',
+                                coordinateSystem: 'bmap',
+                                polyline: true,
+                                data: aircraftTrail,
+                                lineStyle: {
+                                    width: 0.5
+                                },
+                                effect: {
+                                    color: 'rgb(255, 0, 0)',
+                                    constantSpeed: 20,
+                                    show: true,
+                                    trailLength: 0.1,
+                                    symbolSize: 3
+                                },
+                                zlevel: 1
                             }]
-                        });
+                        }, true);
                         var bmap = myChart.getModel().getComponent('bmap').getBMap();
                         bmap.addControl(new BMap.MapTypeControl());
                         bmap.enableScrollWheelZoom();

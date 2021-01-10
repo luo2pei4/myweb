@@ -16,7 +16,8 @@ func RegistRoutine() {
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/choice", choice)
 	http.HandleFunc("/searchExRate", searchExRate)
-	http.HandleFunc("/adsbCoverRange", adsbCoverRange)
+	http.HandleFunc("/adsbCoverage", adsbCoverage)
+	http.HandleFunc("/adsbTrail", adsbTrail)
 }
 
 // RenderTempalate 渲染网页
@@ -35,7 +36,9 @@ func choice(response http.ResponseWriter, request *http.Request) {
 	case "1":
 		renderTempalate(response, "static/html/exchange.html", nil)
 	case "2":
-		renderTempalate(response, "static/html/adsbCoverRange.html", nil)
+		renderTempalate(response, "static/html/adsbCoverage.html", nil)
+	case "3":
+		renderTempalate(response, "static/html/adsbTrail.html", nil)
 	default:
 		response.Write([]byte("maintainance"))
 	}
