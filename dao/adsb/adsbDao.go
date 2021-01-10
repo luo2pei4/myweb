@@ -20,7 +20,7 @@ func init() {
 }
 
 // GetCoordInfo 获取坐标信息
-func GetCoordInfo(startDate, endDate, arrDep string) (coordList []adsbdto.Coordinate, err error) {
+func GetCoordInfo(startDate, endDate, arrDep string) (coordSlice []adsbdto.Coordinate, err error) {
 
 	sql := `
 	select firstlng as lng, firstlat as lat , count(1) as count from adsb.flightinfo f 
@@ -45,7 +45,7 @@ func GetCoordInfo(startDate, endDate, arrDep string) (coordList []adsbdto.Coordi
 		return nil, err
 	}
 
-	var coordSlice = make([]adsbdto.Coordinate, 0)
+	coordSlice = make([]adsbdto.Coordinate, 0)
 
 	for rows.Next() {
 
@@ -58,5 +58,5 @@ func GetCoordInfo(startDate, endDate, arrDep string) (coordList []adsbdto.Coordi
 		coordSlice = append(coordSlice, coordInfo)
 	}
 
-	return coordSlice, nil
+	return
 }

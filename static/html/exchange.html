@@ -96,17 +96,18 @@
                     currency:$("#currency").val()
                 },
                 function(resp, status){
-                    rateinfoList = JSON.parse(resp);
-                    var errMsg = rateinfoList.ErrMsg;
-                    var minrate = rateinfoList.Min;
-                    var maxrate = rateinfoList.Max;
-                    var rateInfoSlice = rateinfoList.RateInfoSlice;
 
-                    if (rateInfoSlice == null || rateInfoSlice.length == 0) {
-                        alert(errMsg)
+                    pageInfo = JSON.parse(resp);
+                    var errMsg = pageInfo.ErrMsg;
+
+                    if (errMsg.length != 0) {
+                        alert(errMsg);
                         return;
                     }
 
+                    var minrate = pageInfo.Data.Min;
+                    var maxrate = pageInfo.Data.Max;
+                    var rateInfoSlice = pageInfo.Data.RateInfoSlice;
                     var date = [];
                     var data = [];
 

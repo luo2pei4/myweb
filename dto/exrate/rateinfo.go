@@ -12,7 +12,6 @@ type RateInfo struct {
 
 // RateInfoList 汇率信息，含最大最小值
 type RateInfoList struct {
-	ErrMsg        string
 	Min           float64
 	Max           float64
 	RateInfoSlice []RateInfo

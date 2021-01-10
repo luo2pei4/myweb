@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	authenticate "myweb/auth"
-	exratedto "myweb/dto/exrate"
+	"myweb/dto"
 	"myweb/service"
 	"myweb/utils"
 	"net/http"
@@ -30,8 +30,6 @@ func searchExRate(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var rateInfoList *exratedto.RateInfoList
-
 	request.ParseForm()
 	bankID := utils.StringToInt(request.Form.Get("bank"))
 	bankTableColumnID := utils.StringToInt(request.Form.Get("price"))
@@ -39,11 +37,11 @@ func searchExRate(response http.ResponseWriter, request *http.Request) {
 	endDate := request.Form.Get("endDate")
 	currencyID := utils.StringToInt(request.Form.Get("currency"))
 
+	pageInfo := dto.PageInfo{}
+
 	if startDate == "" {
 
-		rateInfoList = &exratedto.RateInfoList{
-			ErrMsg: "请输入开始和结束日期.",
-		}
+		pageInfo.ErrMsg = "请输入开始和结束日期."
 
 	} else {
 
@@ -57,21 +55,21 @@ func searchExRate(response http.ResponseWriter, request *http.Request) {
 
 		if err != nil {
 			fmt.Println(err.Error())
-			rilist.ErrMsg = "系统异常, 请稍后再试."
+			pageInfo.ErrMsg = "系统异常, 请稍后再试."
 		}
 
 		if len(rilist.RateInfoSlice) == 0 {
-			rilist.ErrMsg = "没有数据, 请重新查询."
+			pageInfo.ErrMsg = "没有数据, 请重新指定查询条件."
 		}
 
-		rateInfoList = rilist
+		pageInfo.Data = rilist
 	}
 
-	obj, err := json.Marshal(rateInfoList)
+	obj, err := json.Marshal(pageInfo)
 
 	if err != nil {
 		fmt.Println(err.Error())
-		rateInfoList.ErrMsg = "系统异常, 请稍后再试."
+		pageInfo.ErrMsg = "系统异常, 请稍后再试."
 	}
 
 	authenticate.RedistributeToken(response, claims.UserID)
@@ -98,21 +96,38 @@ func adsbCoverRange(response http.ResponseWriter, request *http.Request) {
 	startDate := request.Form.Get("startDate")
 	endDate := request.Form.Get("endDate")
 	arrDep := request.Form.Get("arrDep")
+	pageInfo := dto.PageInfo{}
 
-	coordList, err := service.ReadCoordInfo(startDate+" 00:00:00", endDate+" 23:59:59", arrDep)
+	if startDate == "" {
+
+		pageInfo.ErrMsg = "请输入开始和结束日期."
+
+	} else {
+
+		// 如果没有输入结束日期, 默认以当天为结束日期
+		if endDate == "" {
+			now := time.Now().Format(time.RFC3339)
+			endDate = now[:10]
+		}
+
+		coordList, err := service.ReadCoordInfo(startDate+" 00:00:00", endDate+" 23:59:59", arrDep)
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		if len(coordList) == 0 {
+			pageInfo.ErrMsg = "没有数据, 请重新指定查询条件."
+		} else {
+			pageInfo.Data = coordList
+		}
+	}
+
+	obj, err := json.Marshal(pageInfo)
 
 	if err != nil {
 		fmt.Println(err.Error())
-	}
-
-	if len(coordList) == 0 {
-		fmt.Println("No data...")
-	}
-
-	obj, err := json.Marshal(coordList)
-
-	if err != nil {
-		fmt.Println(err.Error())
+		pageInfo.ErrMsg = "系统异常, 请稍后再试."
 	}
 
 	authenticate.RedistributeToken(response, claims.UserID)
